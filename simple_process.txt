@@ -1,9 +1,0 @@
-| Step                             | Operation                    | By Default? | Explanation                       |
-| -------------------------------- | ---------------------------- | ----------- | --------------------------------- |
-| **1. Lowercasing**               | Convert text to lowercase    | ✔️ Yes      | Always applied                    |
-| **2. Remove special characters** | Remove punctuation & symbols | ✔️ Yes      | Keeps only alphabets              |
-| **3. Remove numbers**            | Remove digits                | ✔️ Yes      | Numbers are removed automatically |
-| **4. Tokenization**              | Split into words             | ✔️ Yes      | Always returns list of words      |
-| **5. Remove short words**        | Remove words < `min_len`     | ✔️ Yes      | Default `min_len = 2`             |
-| **6. Remove long words**         | Remove words > `max_len`     | ✔️ Yes      | Default `max_len = 15`            |
-| **7. Remove accents**            | Convert accented chars       | ❌ No        | Only if `deacc=True`              |

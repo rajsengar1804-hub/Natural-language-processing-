@@ -1,0 +1,188 @@
+| Step                             | Operation                    | By Default? | Explanation                       |
+| -------------------------------- | ---------------------------- | ----------- | --------------------------------- |
+| **1. Lowercasing**               | Convert text to lowercase    | ✔️ Yes      | Always applied                    |
+| **2. Remove special characters** | Remove punctuation & symbols | ✔️ Yes      | Keeps only alphabets              |
+| **3. Remove numbers**            | Remove digits                | ✔️ Yes      | Numbers are removed automatically |
+| **4. Tokenization**              | Split into words             | ✔️ Yes      | Always returns list of words      |
+| **5. Remove short words**        | Remove words < `min_len`     | ✔️ Yes      | Default `min_len = 2`             |
+| **6. Remove long words**         | Remove words > `max_len`     | ✔️ Yes      | Default `max_len = 15`            |
+| **7. Remove accents**            | Convert accented chars       | ❌ No        | Only if `deacc=True`              |
+
+simple_preprocess paragraph ko sentences me convert nahi karta
+
+What it actually does
+
+👉 It takes any text (sentence ya paragraph) and directly converts it into:
+
+➡️ list of words (tokens)
+
+🔹 Example
+text = "I love data science. It is amazing!"
+Using simple_preprocess:
+['love', 'data', 'science', 'it', 'is', 'amazing']
+
+👉 Notice:
+
+❌ Sentence break (.) ignore ho gaya
+❌ Separate sentences nahi mile
+✔️ Direct words mil gaye
+
+
+
+
+ CountVectorizer expects:
+
+✔️ List of sentences (strings)
+❌ NOT list of list of words
+
+Because:
+
+It does its own tokenization internally
+
+
+If you REALLY want to pass tokens directly:
+then we have to write  this ->CountVectorizer(analyzer=lambda x: x)
+corpus = [['i','love','data'], ['ml','is','fun']]
+cv = CountVectorizer(analyzer=lambda x: x)
+
+X = cv.fit_transform(corpus)
+
+✔️ Now it works
+
+
+
+| Parameter           | Default Value   | Used by Default? | What it means                       |
+| ------------------- | --------------- | ---------------- | ----------------------------------- |
+| **`input`**         | `'content'`     | ✔️ Yes           | Takes raw text as input             |
+| **`encoding`**      | `'utf-8'`       | ✔️ Yes           | Default text encoding               |
+| **`decode_error`**  | `'strict'`      | ✔️ Yes           | Raises error if decoding fails      |
+| **`strip_accents`** | `None`          | ❌ No             | No accent removal unless specified  |
+| **`lowercase`**     | `True`          | ✔️ Yes           | Automatically converts to lowercase |
+| **`preprocessor`**  | `None`          | ❌ No             | No custom preprocessing             |
+| **`tokenizer`**     | `None`          | ❌ No             | Uses default tokenizer              |
+| **`analyzer`**      | `'word'`        | ✔️ Yes           | Works on words                      |
+| **`stop_words`**    | `None`          | ❌ No             | No stopword removal                 |
+| **`token_pattern`** | `(?u)\b\w\w+\b` | ✔️ Yes           | Selects words with ≥2 chars         |
+| **`ngram_range`**   | `(1,1)`         | ✔️ Yes           | Only unigrams                       |
+| **`max_df`**        | `1.0`           | ✔️ Yes           | No filtering of frequent words      |
+| **`min_df`**        | `1`             | ✔️ Yes           | Keeps all words (even rare)         |
+| **`max_features`**  | `None`          | ❌ No             | No limit on vocabulary              |
+| **`vocabulary`**    | `None`          | ❌ No             | Vocabulary learned automatically    |
+| **`binary`**        | `False`         | ✔️ Yes           | Uses word counts (not 0/1)          |
+| **`dtype`**         | `int64`         | ✔️ Yes           | Default data type                   |
+
+
+
+simple_preprocess gives list of list of words
+but Bag of Words needs list of sentences
+
+👉 YES ✔️ this mismatch is real
+
+🔥 Correct understanding
+📊 Data format difference
+Method	Input format required
+Word2Vec	[['i','love','data'], ['ml','is','fun']]
+Bag of Words	["i love data", "ml is fun"]
+🔹 What happens if you use simple_preprocess for BoW?
+
+simple_preprocess gives:
+
+[['i','love','data'], ['ml','is','fun']]
+
+👉 But BoW (like in scikit-learn) expects:
+
+["i love data", "ml is fun"]
+✅ Solution (VERY IMPORTANT)
+
+👉 You just need to join words back into sentences
+
+🔹 Correct pipeline for BoW
+from gensim.utils import simple_preprocess
+
+corpus = []
+
+for text in df['message']:
+    tokens = simple_preprocess(text)   # list of words
+    sentence = ' '.join(tokens)        # convert back to sentence
+    corpus.append(sentence)
+🔥 Final Output
+["i love data", "machine learning is fun"]
+
+👉 Now this works perfectly with:
+
+CountVectorizer (BoW)
+TF-IDF
+⚠️ Key Insight (must remember)
+
+👉
+
+simple_preprocess → gives tokens (for Word2Vec)
+BoW/TF-IDF → need sentences (strings)
+
+👉 So:
+tokens → join → sentence → BoW
+
+✅ Final one-line answer
+
+👉
+If you use simple_preprocess for BoW, you must join tokens back into sentences using ' '.join()
+
+
+
+
+
+
+🔹 1. Word2Vec (in Gensim)
+
+👉 It needs list of sentences where each sentence is a list of words
+
+✔️ Format:
+[
+  ['i', 'love', 'data'],
+  ['machine', 'learning', 'is', 'fun']
+]
+
+👉 NOT just a list of words
+👉 NOT joined sentences
+
+🔹 2. Bag of Words (BoW)
+
+👉 It needs list of sentences (strings)
+
+✔️ Format:
+[
+  "i love data",
+  "machine learning is fun"
+]
+
+👉 Internally it will:
+
+tokenize
+build vocabulary
+count words
+🔹 3. TF-IDF
+
+👉 Same as BoW → list of sentences (strings)
+
+✔️ Format:
+[
+  "i love data",
+  "machine learning is fun"
+]
+🔥 Key Difference (Very Important)
+Model	Input Format
+Word2Vec	List of list of words
+BoW	List of sentences (string)
+TF-IDF	List of sentences (string)
+🔥 Why this difference?
+👉 Word2Vec
+Learns context
+Needs word sequences
+Works on tokens
+👉 BoW / TF-IDF
+Works on frequency
+Doesn’t care about order much
+Can tokenize internally
+🔥 Simple analogy
+Word2Vec → understands meaning + context
+BoW / TF-IDF → just counts words
